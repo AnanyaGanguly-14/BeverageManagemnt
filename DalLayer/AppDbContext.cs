@@ -16,7 +16,9 @@ namespace DalLayer
         {
             modelBuilder.Entity<BeverageCategory>()
             .ToTable("BEVERAGE_CATEGORY")
-            .HasKey(b => b.BEVERAGE_CATEGORY_ID);
+            .HasKey(pk => pk.BEVERAGE_CATEGORY_ID);
+
+            modelBuilder.Entity<ExceptionDetails>().HasNoKey();
         }
 
     }

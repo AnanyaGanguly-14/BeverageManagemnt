@@ -1,9 +1,6 @@
 ﻿using BeverageManagemnt.BusinessLayer;
 using BeverageManagemnt.Exception;
-using DalLayer;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Model;
 
 namespace BeverageManagemnt.Controllers
@@ -27,11 +24,27 @@ namespace BeverageManagemnt.Controllers
           return await _beveragesBL.GetBeverages();
         }
 
-        //[HttpPost]
-       // [Route("add")] 
-        //public async Task<IList<BeverageCategory>> AddProducts([FromBody] BeverageCategory)
-       // {
-        //   
-        //}
+        [HttpPost]
+        [Route("addbeverages")]
+
+        public async Task<IList<BeverageCategory>> AddBeverages([FromBody] BeverageCategory beverageCategory)
+        {
+            return await _beveragesBL.AddBeverages(beverageCategory);
+        }
+
+
+        [HttpPut]
+        [Route("editbeverages")]
+        public async Task<IList<BeverageCategory>> EditBeverages([FromBody] BeverageCategory beverageCategory)
+        {
+            return await _beveragesBL.EditBeverages(beverageCategory);
+        }
+
+        [HttpDelete]
+        [Route("deletebeverages")]
+        public async Task<IList<BeverageCategory>> DeleteBeverages([FromBody] BeverageCategory beverageCategory)
+        {
+            return await _beveragesBL.DeleteBeverages(beverageCategory);
+        }
     }
 }
