@@ -280,7 +280,7 @@ namespace BeverageManagemnt.BusinessLayer
         }
         #endregion
 
-        #region common
+        #region Common Functions
         private static IList<T> ExceptionDetails<T>(T beverageCategory, IList<T> result
                            , BeverageServiceException? ex, SqlException? sqlException)
                 where T : IHasExceptionDetails
