@@ -27,7 +27,7 @@ namespace BeverageManagemnt.BusinessLayer
             }
             catch (BeverageServiceException ex)
             {
-                throw new BeverageServiceException(null);
+                throw new BeverageServiceException(ex.Message);
             }
             return beverages;
         }
