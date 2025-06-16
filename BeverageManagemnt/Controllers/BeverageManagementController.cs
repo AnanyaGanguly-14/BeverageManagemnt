@@ -19,6 +19,7 @@ namespace BeverageManagemnt.Controllers
         }
 
         [HttpGet]
+        [Route("beveragecategory")]
         public async Task<IList<BeverageCategory>> GetBeveragesList()
         {
           return await _beveragesBL.GetBeverages();
@@ -45,6 +46,13 @@ namespace BeverageManagemnt.Controllers
         public async Task<IList<BeverageCategory>> DeleteBeverages([FromBody] BeverageCategory beverageCategory)
         {
             return await _beveragesBL.DeleteBeverages(beverageCategory);
+        }
+
+        [HttpGet]
+        [Route("beveragedetails")]
+        public async Task<IList<BeverageDetails>> GetBeveragesDetailsList()
+        {
+            return await _beveragesBL.GetBeverageDetails();
         }
     }
 }

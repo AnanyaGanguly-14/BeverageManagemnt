@@ -3,7 +3,7 @@ using DalLayer;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Model;
-using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 
 namespace BeverageManagemnt.BusinessLayer
 {
@@ -15,7 +15,7 @@ namespace BeverageManagemnt.BusinessLayer
         {
             _context = context;
         }
-
+        #region Beverage Category
         public async Task<IList<BeverageCategory>> GetBeverages()
         {
             List<BeverageCategory> beverages;
@@ -79,7 +79,7 @@ namespace BeverageManagemnt.BusinessLayer
             return System.Text.RegularExpressions.Regex.IsMatch(beverageType, pattern);
         }
         private static IList<BeverageCategory> ExceptionDetails(BeverageCategory beverageCategory, IList<BeverageCategory> result
-                                    , BeverageServiceException ex, SqlException sqlException)
+                                    , BeverageServiceException? ex, SqlException? sqlException)
         {
             if (ex != null)
             {
@@ -99,7 +99,8 @@ namespace BeverageManagemnt.BusinessLayer
                     var sqlExceptionRes = new BeverageServiceException("Err_003", ex);
                     beverageCategory.ExceptionDetails = new ExceptionDetails
                     {
-                        Code = sqlExceptionRes.Message
+                        Code = sqlExceptionRes.Message,
+                        Message = ex.Message
                     };
                     result.Add(beverageCategory);
                
@@ -177,6 +178,68 @@ namespace BeverageManagemnt.BusinessLayer
                 throw new BeverageServiceException(null);
             }
             }
+        #endregion
+
+        #region Beverage Details
+        public async Task<IList<BeverageDetails>> GetBeverageDetails()
+        {
+            List<BeverageDetails> beverageDetails;
+            try
+            {
+
+                beverageDetails = await(from details in _context.BeverageDetails
+                                           join category in _context.BeverageCategories
+                                           on details.BEVERAGE_CATEGORY_ID equals category.BEVERAGE_CATEGORY_ID
+                                           select new BeverageDetails
+                                           {
+                                               BEVERAGE_DETAILS_ID = details.BEVERAGE_DETAILS_ID,
+                                               BEVERAGE_SIZE = details.BEVERAGE_SIZE,
+                                               BEVERAGE_PRICE ="$"+ details.BEVERAGE_PRICE,
+                                               BEVERAGE_CATEGORY_ID = details.BEVERAGE_CATEGORY_ID,
+                                               beverageCategory = category
+                                           }).ToListAsync();
+            }
+            catch (BeverageServiceException ex)
+            {
+                throw new BeverageServiceException(null);
+            }
+            return beverageDetails;
         }
+
+        public async Task<IList<BeverageDetails>> AddBeverageDetails(BeverageDetails beverageDetails)
+        {
+            List<BeverageDetails> beverageDetailsResult;
+            if (beverageDetails != null)
+            {
+                try
+                {
+
+                    await _context.BeverageDetails.AddAsync(beverageDetails);
+                    _context.SaveChangesAsync();
+                    return await _context.BeverageDetails.ToListAsync();
+                }
+
+                catch (BeverageServiceException ex)
+                {
+                    return ExceptionDetails(beverageDetails, beverageDetailsResult, ex, null);
+                }
+                catch (SqlException ex)
+                {
+
+                    return ExceptionDetails(beverageDetails, beverageDetailsResult, null, ex);
+                }
+            }
+            else
+            {
+                throw new BeverageServiceException(null);
+            }
+        }
+
+        
+        
+        #endregion
+
+
     }
+}
 

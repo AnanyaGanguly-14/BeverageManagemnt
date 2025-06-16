@@ -14,5 +14,7 @@ namespace Model
         public required string BEVERAGE_TYPE { get; set; }
         [NotMapped]
         public ExceptionDetails? ExceptionDetails { get; set; }
+
+        public List<BeverageDetails>? BeverageDetails { get; set; }// Navigation property many to one relationship
     }
 }
