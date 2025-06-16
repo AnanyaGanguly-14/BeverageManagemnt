@@ -1,3 +1,4 @@
+using BeverageManagemnt;
 using BeverageManagemnt.BusinessLayer;
 using DalLayer;
 using Microsoft.EntityFrameworkCore;
@@ -19,10 +20,13 @@ builder.Services.AddSwaggerGen(c =>
 
 
 builder.Services.AddScoped<BeveragesBL>();
+//builder.Services.AddScoped<AdminOnlyFilter>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

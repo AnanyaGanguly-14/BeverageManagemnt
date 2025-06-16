@@ -16,5 +16,6 @@ namespace Common
             this.Code = code;
             this.Message = message;
         }
+
     }
 }

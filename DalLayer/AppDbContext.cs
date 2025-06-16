@@ -13,6 +13,7 @@ namespace DalLayer
 
         public DbSet<BeverageCategory> BeverageCategories { get; set; }
         public DbSet<BeverageDetails> BeverageDetails { get; set; }
+        public DbSet<UserDetails> UserDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +26,10 @@ namespace DalLayer
             modelBuilder.Entity<BeverageDetails>()
                 .ToTable("BEVERAGE_DETAILS")
                 .HasKey(pk=>pk.BEVERAGE_DETAILS_ID);
+
+            modelBuilder.Entity<UserDetails>()
+                .ToTable("USER_DETAILS").
+                HasNoKey();
         }
 
     }

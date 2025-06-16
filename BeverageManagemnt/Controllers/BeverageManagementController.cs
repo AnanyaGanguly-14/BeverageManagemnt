@@ -19,6 +19,7 @@ namespace BeverageManagemnt.Controllers
         }
 
         #region Beverage Category
+        [TypeFilter(typeof(AdminOnlyFilter))]
         [HttpGet]
         [Route("beveragecategory")]
         public async Task<IList<BeverageCategory>> GetBeveragesList()
@@ -26,6 +27,7 @@ namespace BeverageManagemnt.Controllers
           return await _beveragesBL.GetBeverages();
         }
 
+        [TypeFilter(typeof(AdminOnlyFilter))]
         [HttpPost]
         [Route("addbeverages")]
 
@@ -34,14 +36,14 @@ namespace BeverageManagemnt.Controllers
             return await _beveragesBL.AddBeverages(beverageCategory);
         }
 
-
+        [TypeFilter(typeof(AdminOnlyFilter))]
         [HttpPut]
         [Route("editbeverages")]
         public async Task<IList<BeverageCategory>> EditBeverages([FromBody] BeverageCategory beverageCategory)
         {
             return await _beveragesBL.EditBeverages(beverageCategory);
         }
-
+        [TypeFilter(typeof(AdminOnlyFilter))]
         [HttpDelete]
         [Route("deletebeverages")]
         public async Task<IList<BeverageCategory>> DeleteBeverages([FromBody] BeverageCategory beverageCategory)
