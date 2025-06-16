@@ -18,6 +18,7 @@ namespace BeverageManagemnt.Controllers
             _beveragesBL = beveragesBL;
         }
 
+        #region Beverage Category
         [HttpGet]
         [Route("beveragecategory")]
         public async Task<IList<BeverageCategory>> GetBeveragesList()
@@ -48,11 +49,36 @@ namespace BeverageManagemnt.Controllers
             return await _beveragesBL.DeleteBeverages(beverageCategory);
         }
 
+        #endregion
+
+        #region Beverage Details
         [HttpGet]
         [Route("beveragedetails")]
         public async Task<IList<BeverageDetails>> GetBeveragesDetailsList()
         {
             return await _beveragesBL.GetBeverageDetails();
         }
+
+        [HttpPost]
+        [Route("addbeverageDetails")]
+
+        public async Task<IList<BeverageDetails>> AddBeverageDetails([FromBody] BeverageDetails beverageDetails)
+        {
+            return await _beveragesBL.AddBeverageDetails(beverageDetails);
+        }
+
+        [HttpPut]
+        [Route("editbeveragedetails")]
+        public async Task<IList<BeverageDetails>> EditBeverageDetails([FromBody] BeverageDetails beverageDetails)
+        {
+            return await _beveragesBL.EditBeverageDetails(beverageDetails);
+        }
+        [HttpDelete]
+        [Route("deletebeveragedetails")]
+        public async Task<IList<BeverageDetails>> DeleteBeverageDetails([FromBody] BeverageDetails beverageDetails)
+        {
+            return await _beveragesBL.DeleteBeverageDetails(beverageDetails);
+        }
+        #endregion
     }
 }

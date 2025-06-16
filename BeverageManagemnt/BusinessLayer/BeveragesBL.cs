@@ -1,9 +1,11 @@
 ﻿using BeverageManagemnt.Exception;
+using BeverageManagemnt.Interface;
+using Common;
 using DalLayer;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Model;
-using System.Reflection.Metadata.Ecma335;
+
 
 namespace BeverageManagemnt.BusinessLayer
 {
@@ -37,7 +39,7 @@ namespace BeverageManagemnt.BusinessLayer
             {
                 try
                 {
-                    if (!IsValidBeverageType(beverageCategory.BEVERAGE_TYPE))
+                    if (!IsValidBeverageTypeandCategory(beverageCategory.BEVERAGE_TYPE))
                     {
                         throw new BeverageServiceException("Err_004");
                     }
@@ -65,50 +67,6 @@ namespace BeverageManagemnt.BusinessLayer
             }
         }
 
-        public static bool IsValidBeverageType(string beverageType)
-        {
-
-            if (string.IsNullOrWhiteSpace(beverageType) || beverageType.Trim().ToLower() == "string" ||
-                beverageType.StartsWith(" ") || beverageType.EndsWith(" "))
-                { 
-                  return false;
-                }
-
-            // Regex: only letters and single spaces between words
-            var pattern = @"^[A-Za-z]+( [A-Za-z]+)*$";
-            return System.Text.RegularExpressions.Regex.IsMatch(beverageType, pattern);
-        }
-        private static IList<BeverageCategory> ExceptionDetails(BeverageCategory beverageCategory, IList<BeverageCategory> result
-                                    , BeverageServiceException? ex, SqlException? sqlException)
-        {
-            if (ex != null)
-            {
-                beverageCategory.ExceptionDetails = new ExceptionDetails
-                {
-                    Code = ex.ErrorCode,
-                    Message = ex.Message
-                };
-                result.Add(beverageCategory);
-            }
-            else
-            {
-
-                if (sqlException != null)
-
-                {
-                    var sqlExceptionRes = new BeverageServiceException("Err_003", ex);
-                    beverageCategory.ExceptionDetails = new ExceptionDetails
-                    {
-                        Code = sqlExceptionRes.Message,
-                        Message = ex.Message
-                    };
-                    result.Add(beverageCategory);
-               
-                }
-            }
-
-            return result;
-        }
 
         public async Task<IList<BeverageCategory>> EditBeverages(BeverageCategory beverageCategory)
         {
@@ -117,7 +75,7 @@ namespace BeverageManagemnt.BusinessLayer
             {
                 try
                 {
-                    if (!IsValidBeverageType(beverageCategory.BEVERAGE_TYPE))
+                    if (!IsValidBeverageTypeandCategory(beverageCategory.BEVERAGE_TYPE))
                     {
                         throw new BeverageServiceException("Err_004");
                     }
@@ -194,7 +152,7 @@ namespace BeverageManagemnt.BusinessLayer
                                            {
                                                BEVERAGE_DETAILS_ID = details.BEVERAGE_DETAILS_ID,
                                                BEVERAGE_SIZE = details.BEVERAGE_SIZE,
-                                               BEVERAGE_PRICE ="$"+ details.BEVERAGE_PRICE,
+                                               BEVERAGE_PRICE = details.BEVERAGE_PRICE,
                                                BEVERAGE_CATEGORY_ID = details.BEVERAGE_CATEGORY_ID,
                                                beverageCategory = category
                                            }).ToListAsync();
@@ -208,14 +166,18 @@ namespace BeverageManagemnt.BusinessLayer
 
         public async Task<IList<BeverageDetails>> AddBeverageDetails(BeverageDetails beverageDetails)
         {
-            List<BeverageDetails> beverageDetailsResult;
+            List<BeverageDetails> beverageDetailsResult = new List<BeverageDetails>();
             if (beverageDetails != null)
             {
                 try
                 {
+                    if (!IsValidBeverageTypeandCategory(beverageDetails.BEVERAGE_SIZE))
+                    {
+                        throw new BeverageServiceException("Err_004");
+                    }
 
                     await _context.BeverageDetails.AddAsync(beverageDetails);
-                    _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
                     return await _context.BeverageDetails.ToListAsync();
                 }
 
@@ -223,10 +185,15 @@ namespace BeverageManagemnt.BusinessLayer
                 {
                     return ExceptionDetails(beverageDetails, beverageDetailsResult, ex, null);
                 }
-                catch (SqlException ex)
+                catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx)
                 {
+                    if ( sqlEx.Message.Contains("UQ_BEVERAGE_CATEGORY_SIZE"))
+                    {
+                        var duplicateEx = new BeverageServiceException("Err_DUPLICATE");
+                        return ExceptionDetails(beverageDetails, beverageDetailsResult, duplicateEx, sqlEx);
+                    }
 
-                    return ExceptionDetails(beverageDetails, beverageDetailsResult, null, ex);
+                    return ExceptionDetails(beverageDetails, beverageDetailsResult, null, sqlEx);
                 }
             }
             else
@@ -235,8 +202,125 @@ namespace BeverageManagemnt.BusinessLayer
             }
         }
 
-        
-        
+        public async Task<IList<BeverageDetails>> EditBeverageDetails(BeverageDetails beverageDetails)
+        {
+            IList<BeverageDetails> result = new List<BeverageDetails>();
+            if (beverageDetails != null)
+            {
+                try
+                {
+                    if (!IsValidBeverageTypeandCategory(beverageDetails.BEVERAGE_SIZE))
+                    {
+                        throw new BeverageServiceException("Err_004");
+                    }
+                    var existingBeverage = await _context.BeverageDetails.FindAsync(beverageDetails.BEVERAGE_DETAILS_ID);
+                    if (existingBeverage == null)
+                    {
+                        throw new BeverageServiceException("Err_001");
+                    }
+
+                    existingBeverage.BEVERAGE_SIZE = beverageDetails.BEVERAGE_SIZE;
+                    existingBeverage.BEVERAGE_PRICE = beverageDetails.BEVERAGE_PRICE;
+                    _context.BeverageDetails.Update(existingBeverage);
+                    await _context.SaveChangesAsync();
+
+                    return await _context.BeverageDetails.ToListAsync();
+                }
+                catch (BeverageServiceException ex)
+                {
+                    return ExceptionDetails(beverageDetails, result, ex, null);
+                }
+                catch (SqlException ex)
+                {
+                    return ExceptionDetails(beverageDetails, result, null, ex);
+                }
+            }
+            else
+            {
+                throw new BeverageServiceException(null);
+            }
+        }
+
+        public async Task<IList<BeverageDetails>> DeleteBeverageDetails(BeverageDetails beverageDetails)
+        {
+            IList<BeverageDetails> result = new List<BeverageDetails>();
+            if (beverageDetails != null)
+            {
+                try
+                {
+                    var existingBeverage = await _context.BeverageDetails.FindAsync(beverageDetails.BEVERAGE_DETAILS_ID);
+                    if (existingBeverage == null)
+                    {
+                        throw new BeverageServiceException("Err_005");
+                    }
+                    _context.BeverageDetails.Remove(existingBeverage);
+                    await _context.SaveChangesAsync();
+                    return await _context.BeverageDetails.ToListAsync();
+                }
+                catch (BeverageServiceException ex)
+                {
+                    return ExceptionDetails(beverageDetails, result, ex, null);
+                }
+                catch (SqlException ex)
+                {
+                    return ExceptionDetails(beverageDetails, result, null, ex);
+                }
+            }
+            else
+            {
+                throw new BeverageServiceException(null);
+            }
+        }
+        #endregion
+
+        #region common
+        private static IList<T> ExceptionDetails<T>(T beverageCategory, IList<T> result
+                           , BeverageServiceException? ex, SqlException? sqlException)
+                where T : IHasExceptionDetails
+        {
+            if (ex != null)
+            {
+                beverageCategory.ExceptionDetails = new ExceptionDetails
+                {
+                    Code = ex.ErrorCode,
+                    Message = ex.Message
+                };
+                result.Add(beverageCategory);
+            }
+            else
+            {
+
+                if (sqlException != null)
+
+                {
+                    var sqlExceptionRes = new BeverageServiceException("Err_003", ex);
+                    beverageCategory.ExceptionDetails = new ExceptionDetails
+                    {
+                        Code = sqlExceptionRes.Message,
+                        Message = ex.Message
+                    };
+                    result.Add(beverageCategory);
+
+                }
+            }
+
+            return result;
+        }
+
+
+        public static bool IsValidBeverageTypeandCategory(string? beverage)
+        {
+
+            if (string.IsNullOrWhiteSpace(beverage) || beverage.Trim().ToLower() == "string" ||
+                beverage.StartsWith(" ") || beverage.EndsWith(" "))
+            {
+                return false;
+            }
+
+            // Regex: only letters and single spaces between words
+            var pattern = @"^[A-Za-z]+( [A-Za-z]+)*$";
+            return System.Text.RegularExpressions.Regex.IsMatch(beverage, pattern);
+        }
         #endregion
 
 

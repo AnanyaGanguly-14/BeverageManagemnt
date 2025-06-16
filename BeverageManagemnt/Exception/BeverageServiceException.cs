@@ -1,4 +1,6 @@
-﻿namespace BeverageManagemnt.Exception
+﻿using System.Drawing;
+
+namespace BeverageManagemnt.Exception
 {
     public class BeverageServiceException : System.Exception
     {
@@ -26,10 +28,12 @@
                     return "Beverage Category already exists.";
 
                 case "Err_004":
-                    return "Valid Beverage Category is required.";
+                    return "Valid Beverage Details is required.";
 
                 case "Err_005":
                     return "Beverage Category not found.";
+                case "Err_DUPLICATE":
+                    return "Duplicate Entry";
 
                 default:
                     return "An unexpected error occurred.";

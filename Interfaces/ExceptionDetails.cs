@@ -1,8 +1,7 @@
 ﻿
-
 using System.Text.Json.Serialization;
 
-namespace Model
+namespace Common
 {
     public class ExceptionDetails
     {
