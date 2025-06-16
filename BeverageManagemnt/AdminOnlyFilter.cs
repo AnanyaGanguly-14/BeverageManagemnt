@@ -21,7 +21,7 @@ namespace BeverageManagemnt
             if (user != null)
             {
                 //var userId = user.FindFirst(ClaimTypes.Name)?.Value;
-                var userId = "support";
+                var userId = "sampleuser";
                 var userRole = await (from userDetails in _context.UserDetails
                                       where userDetails.USER_ACCESS_ID == userId
                                       select userDetails.USER_ROLE

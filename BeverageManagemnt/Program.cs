@@ -20,7 +20,6 @@ builder.Services.AddSwaggerGen(c =>
 
 
 builder.Services.AddScoped<BeveragesBL>();
-//builder.Services.AddScoped<AdminOnlyFilter>();
 
 
 builder.Services.AddDbContext<AppDbContext>(options =>
