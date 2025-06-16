@@ -21,19 +21,19 @@ namespace BeverageManagemnt
             if (user != null)
             {
                 //var userId = user.FindFirst(ClaimTypes.Name)?.Value;
-                var userId = "sampleuser";
+                var userId = ApiConstants.USERID;
                 var userRole = await (from userDetails in _context.UserDetails
                                       where userDetails.USER_ACCESS_ID == userId
                                       select userDetails.USER_ROLE
                                       ).FirstOrDefaultAsync();
                 if (userRole != null)
                 {
-                    if (!userRole.Contains("Admin"))
+                    if (!userRole.Contains(ApiConstants.USERROLE))
                     {
                         exceptionDetails = new ExceptionDetails()
                         {
-                            Code = "401",
-                            Message = "User not authorized."
+                            Code = ApiConstants.AUTHORIZATIONCODE,
+                            Message = ApiConstants.AUTHORIZATIONMESSAGE
                         };
                         authorizationFilterContext.Result = new JsonResult(exceptionDetails){ };
                     }
