@@ -176,6 +176,13 @@ namespace BeverageManagemnt.BusinessLayer
                         throw new BeverageServiceException("Err_004");
                     }
 
+                    var findCategory = await _context.BeverageCategories.FindAsync(beverageDetails.BEVERAGE_CATEGORY_ID);
+                    if (findCategory == null)
+                    {
+                        throw new BeverageServiceException("Err_005");
+                    }
+
+   
                     await _context.BeverageDetails.AddAsync(beverageDetails);
                     await _context.SaveChangesAsync();
                     return await _context.BeverageDetails.ToListAsync();
