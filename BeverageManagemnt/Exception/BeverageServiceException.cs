@@ -21,8 +21,8 @@ namespace BeverageManagemnt.Exception
          
             switch (message)
             {
-                case "Err_001":
-                    return "Beverage Category not found.";
+                //case "Err_001":
+                //    return "Beverage Category not found.";
 
                 case "Err_002":
                     return "Beverage Category already exists.";
@@ -32,6 +32,10 @@ namespace BeverageManagemnt.Exception
 
                 case "Err_005":
                     return "Beverage Category not found.";
+
+                case "Err_006":
+                    return "Mobile numner cannot be more than 10 digits.";
+
                 case "Err_DUPLICATE":
                     return "Duplicate Entry";
 
@@ -46,9 +50,9 @@ namespace BeverageManagemnt.Exception
         {
             if (message == "Err_003" && innerException.Message.Contains("Connection", StringComparison.OrdinalIgnoreCase))
             {
-                return "Error in adding/modifying Beverage type";
+                return "An error occurred while accessing the database.";
             }
-            return "An error occurred while accessing the database.";
+            return "An error occurred from database.";
         }
     }
 }

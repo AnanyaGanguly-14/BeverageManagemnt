@@ -8,12 +8,19 @@ namespace Model
 {
     public class BeverageCategory : IHasExceptionDetails
     {
+        private string? _beverageType;
+
         [JsonPropertyName("beverage_category_id")]
         public int BEVERAGE_CATEGORY_ID { get; set; }
 
         [JsonPropertyName("beverage_type")]
         [Required(ErrorMessage = "Beverage type is required.")]
-        public required string BEVERAGE_TYPE { get; set; }
+
+        public string BEVERAGE_TYPE
+        {
+            get => _beverageType;
+            set => _beverageType = value?.ToUpper();
+        }
         [NotMapped]
         public ExceptionDetails? ExceptionDetails { get; set; }
         [JsonIgnore]

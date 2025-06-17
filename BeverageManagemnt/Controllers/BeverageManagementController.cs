@@ -82,5 +82,16 @@ namespace BeverageManagemnt.Controllers
             return await _beveragesBL.DeleteBeverageDetails(beverageDetails);
         }
         #endregion
+
+        #region Order Placement
+        [HttpPost]
+        [Route("orderplacement")]
+        public async Task<IList<Orders>> PlaceOrders(Orders orders)
+        {
+            return await _beveragesBL.PlaceOrders(orders);
+        }
+
+
+        #endregion
     }
 }

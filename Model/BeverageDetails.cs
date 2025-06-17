@@ -7,10 +7,17 @@ namespace Model
 {
     public class BeverageDetails : IHasExceptionDetails
     {
+        private string? _beverageSize;
+
         [JsonPropertyName("beverage_deatils_id")]
         public int BEVERAGE_DETAILS_ID { get; set; }
         [JsonPropertyName("beverage_size")]
-        public string? BEVERAGE_SIZE { get; set; }
+       
+        public string? BEVERAGE_SIZE
+        {
+            get => _beverageSize;
+            set => _beverageSize = value?.ToUpper();
+        }
 
         [JsonPropertyName("beverage_price")]
         [DecimalOnly(ErrorMessage = "Price must be a valid decimal number.")]

@@ -5,6 +5,9 @@ using DalLayer;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Model;
+using System.Data;
+using System.Reflection.Metadata.Ecma335;
+using System.Text.Json;
 
 
 namespace BeverageManagemnt.BusinessLayer
@@ -82,7 +85,7 @@ namespace BeverageManagemnt.BusinessLayer
                     var existingBeverage = await _context.BeverageCategories.FindAsync(beverageCategory.BEVERAGE_CATEGORY_ID);
                     if (existingBeverage == null)
                     {
-                        throw new BeverageServiceException("Err_001");
+                        throw new BeverageServiceException("Err_005");
                     }
 
                     existingBeverage.BEVERAGE_TYPE = beverageCategory.BEVERAGE_TYPE;
@@ -91,7 +94,7 @@ namespace BeverageManagemnt.BusinessLayer
 
                     return await _context.BeverageCategories.ToListAsync();
                 }
-                catch(BeverageServiceException ex)
+                catch (BeverageServiceException ex)
                 {
                     return ExceptionDetails(beverageCategory, result, ex, null);
                 }
@@ -135,7 +138,7 @@ namespace BeverageManagemnt.BusinessLayer
             {
                 throw new BeverageServiceException(null);
             }
-            }
+        }
         #endregion
 
         #region Beverage Details
@@ -145,21 +148,21 @@ namespace BeverageManagemnt.BusinessLayer
             try
             {
 
-                beverageDetails = await(from details in _context.BeverageDetails
-                                           join category in _context.BeverageCategories
-                                           on details.BEVERAGE_CATEGORY_ID equals category.BEVERAGE_CATEGORY_ID
-                                           select new BeverageDetails
-                                           {
-                                               BEVERAGE_DETAILS_ID = details.BEVERAGE_DETAILS_ID,
-                                               BEVERAGE_SIZE = details.BEVERAGE_SIZE,
-                                               BEVERAGE_PRICE = details.BEVERAGE_PRICE,
-                                               BEVERAGE_CATEGORY_ID = details.BEVERAGE_CATEGORY_ID,
-                                               beverageCategory = category
-                                           }).ToListAsync();
+                beverageDetails = await (from details in _context.BeverageDetails
+                                         join category in _context.BeverageCategories
+                                         on details.BEVERAGE_CATEGORY_ID equals category.BEVERAGE_CATEGORY_ID
+                                         select new BeverageDetails
+                                         {
+                                             BEVERAGE_DETAILS_ID = details.BEVERAGE_DETAILS_ID,
+                                             BEVERAGE_SIZE = details.BEVERAGE_SIZE,
+                                             BEVERAGE_PRICE = details.BEVERAGE_PRICE,
+                                             BEVERAGE_CATEGORY_ID = details.BEVERAGE_CATEGORY_ID,
+                                             beverageCategory = category
+                                         }).ToListAsync();
             }
             catch (BeverageServiceException ex)
             {
-                throw new BeverageServiceException(null);
+                throw new BeverageServiceException(ex.Message);
             }
             return beverageDetails;
         }
@@ -182,7 +185,7 @@ namespace BeverageManagemnt.BusinessLayer
                         throw new BeverageServiceException("Err_005");
                     }
 
-   
+
                     await _context.BeverageDetails.AddAsync(beverageDetails);
                     await _context.SaveChangesAsync();
                     return await _context.BeverageDetails.ToListAsync();
@@ -194,7 +197,7 @@ namespace BeverageManagemnt.BusinessLayer
                 }
                 catch (DbUpdateException ex) when (ex.InnerException is SqlException sqlEx)
                 {
-                    if ( sqlEx.Message.Contains("UQ_BEVERAGE_CATEGORY_SIZE"))
+                    if (sqlEx.Message.Contains("UQ_BEVERAGE_CATEGORY_SIZE"))
                     {
                         var duplicateEx = new BeverageServiceException("Err_DUPLICATE");
                         return ExceptionDetails(beverageDetails, beverageDetailsResult, duplicateEx, sqlEx);
@@ -223,7 +226,7 @@ namespace BeverageManagemnt.BusinessLayer
                     var existingBeverage = await _context.BeverageDetails.FindAsync(beverageDetails.BEVERAGE_DETAILS_ID);
                     if (existingBeverage == null)
                     {
-                        throw new BeverageServiceException("Err_001");
+                        throw new BeverageServiceException("Err_005");
                     }
 
                     existingBeverage.BEVERAGE_SIZE = beverageDetails.BEVERAGE_SIZE;
@@ -331,6 +334,63 @@ namespace BeverageManagemnt.BusinessLayer
         #endregion
 
 
+        #region
+        public async Task<IList<Orders>> PlaceOrders(Orders orders)
+        {
+            IList<Orders> result = new List<Orders>();
+            if (orders == null)
+            {
+                return result;
+            }
+            else
+            {
+                ValidationForContactNumber(orders);
+                using (var connection = _context.Database.GetDbConnection())
+                {
+                    await connection.OpenAsync();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = "ADD_CUSTOMER_ORDER";
+                        command.CommandType = CommandType.StoredProcedure;
+
+
+                        string jsonForOrder = JsonSerializer.Serialize(orders);
+
+
+                        var param = command.CreateParameter();
+                        param.ParameterName = "@Oders_Json";
+                        param.Value = jsonForOrder;
+                        param.DbType = DbType.String;
+                        command.Parameters.Add(param);
+
+                        var outputParam = command.CreateParameter();
+                        outputParam.ParameterName = "@Order_Confirmation_Number";
+                        outputParam.DbType = DbType.String;
+                        outputParam.Size = 50;
+                        outputParam.Direction = ParameterDirection.Output;
+                        command.Parameters.Add(outputParam);
+
+                        await command.ExecuteNonQueryAsync();
+
+                    }
+                }
+            }
+
+            return result ;
+        }
+
+        private static void ValidationForContactNumber(Orders orders)
+        {
+            string input = orders.CUSTOMER_CONTACT;
+            bool isNumeric = input.All(char.IsDigit);
+            if (isNumeric)
+            {
+                if (input.Length > 10)
+                    throw new BeverageServiceException("Err_006");
+            }
+        }
+        #endregion
     }
 }
 
