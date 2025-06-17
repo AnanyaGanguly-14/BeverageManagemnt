@@ -334,13 +334,13 @@ namespace BeverageManagemnt.BusinessLayer
         #endregion
 
 
-        #region
-        public async Task<IList<Orders>> PlaceOrders(Orders orders)
+        #region PlaceOrders
+        public async Task<string> PlaceOrders(Orders orders)
         {
-            IList<Orders> result = new List<Orders>();
+    
             if (orders == null)
             {
-                return result;
+                return null;
             }
             else
             {
@@ -373,17 +373,29 @@ namespace BeverageManagemnt.BusinessLayer
 
                         await command.ExecuteNonQueryAsync();
 
+                        var confirmationNumber = outputParam.Value?.ToString();
+
+                        if (string.IsNullOrEmpty(confirmationNumber))
+                            return "Order processing failed. Please try again.";
+
+                        return $"Order placed successfully! Your confirmation number is: {confirmationNumber}";
+
                     }
                 }
             }
 
-            return result ;
         }
 
         private static void ValidationForContactNumber(Orders orders)
         {
             string input = orders.CUSTOMER_CONTACT;
+            if (string.IsNullOrWhiteSpace(input))
+                throw new BeverageServiceException("Err_007");
+
             bool isNumeric = input.All(char.IsDigit);
+            if (!isNumeric)
+                throw new BeverageServiceException("Err_006");
+
             if (isNumeric)
             {
                 if (input.Length > 10)

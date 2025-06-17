@@ -86,7 +86,7 @@ namespace BeverageManagemnt.Controllers
         #region Order Placement
         [HttpPost]
         [Route("orderplacement")]
-        public async Task<IList<Orders>> PlaceOrders(Orders orders)
+        public async Task<string> PlaceOrders(Orders orders)
         {
             return await _beveragesBL.PlaceOrders(orders);
         }

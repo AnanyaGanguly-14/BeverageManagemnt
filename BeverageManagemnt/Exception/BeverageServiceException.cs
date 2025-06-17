@@ -21,8 +21,8 @@ namespace BeverageManagemnt.Exception
          
             switch (message)
             {
-                //case "Err_001":
-                //    return "Beverage Category not found.";
+                case "Err_001":
+                    return "Contact number must contain only digits.";
 
                 case "Err_002":
                     return "Beverage Category already exists.";
@@ -35,6 +35,9 @@ namespace BeverageManagemnt.Exception
 
                 case "Err_006":
                     return "Mobile numner cannot be more than 10 digits.";
+
+                case "Err_007":
+                    return "Mobile number must not contain spaces.";
 
                 case "Err_DUPLICATE":
                     return "Duplicate Entry";

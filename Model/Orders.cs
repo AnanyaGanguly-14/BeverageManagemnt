@@ -9,6 +9,7 @@ namespace Model
         public string? CUSTOMER_NAME {  get; set; }
         [JsonPropertyName("customer_contact")]
         public string? CUSTOMER_CONTACT {  get; set; }
+        [JsonPropertyName("orderItems")]
         public List<OrderItems>? OrderItems { get; set; }
         
     }
