@@ -1,4 +1,5 @@
-﻿using BeverageManagemnt.BusinessLayer;
+﻿using Azure.Storage.Blobs;
+using BeverageManagemnt.BusinessLayer;
 using BeverageManagemnt.Exception;
 using Microsoft.AspNetCore.Mvc;
 using Model;
@@ -12,10 +13,18 @@ namespace BeverageManagemnt.Controllers
 
         private readonly BeveragesBL _beveragesBL;
 
-        public BeverageManagementController(BeveragesBL beveragesBL)
+        private readonly string _connectionString;
+        private readonly string _containerName;
+
+
+        public BeverageManagementController(BeveragesBL beveragesBL, IConfiguration configuration)
         {
            
             _beveragesBL = beveragesBL;
+
+            _connectionString = configuration["AzureBlobStorage:ConnectionString"];
+            _containerName = configuration["AzureBlobStorage:ContainerName"];
+
         }
 
         #region Beverage Category
@@ -93,5 +102,39 @@ namespace BeverageManagemnt.Controllers
 
 
         #endregion
+
+        #region FileUpload
+
+        [HttpPost("file")]
+
+        public async Task<IActionResult> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+        
+
+            Directory.CreateDirectory("Uploads");
+
+
+            var blobServiceClient = new BlobServiceClient(_connectionString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(_containerName);
+
+            // Create the container if it doesn't exist
+            await containerClient.CreateIfNotExistsAsync();
+
+            var blobClient = containerClient.GetBlobClient(file.FileName);
+
+            using (var stream = file.OpenReadStream())
+            {
+                await blobClient.UploadAsync(stream, overwrite: true);
+            }
+
+
+            return Ok(new { file.FileName, file.Length });
+
+
+        }
+        #endregion
     }
-}
+    }

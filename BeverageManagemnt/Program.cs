@@ -27,6 +27,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddSingleton<ServiceBusQueueService>();
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
