@@ -26,6 +26,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+    policy =>
+    {
+        policy.AllowAnyOrigin() ;
+    });
+});
 
 builder.Services.AddSingleton<ServiceBusQueueService>();
 
@@ -44,5 +52,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseCors("AllowReactApp");
 
 app.Run();

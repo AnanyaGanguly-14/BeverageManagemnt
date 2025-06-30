@@ -185,7 +185,7 @@ namespace BeverageManagemnt.BusinessLayer
                         throw new BeverageServiceException("Err_005");
                     }
 
-
+                    beverageDetails.beverageCategory = null;
                     await _context.BeverageDetails.AddAsync(beverageDetails);
                     await _context.SaveChangesAsync();
                     return await _context.BeverageDetails.ToListAsync();

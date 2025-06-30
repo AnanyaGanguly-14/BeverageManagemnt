@@ -42,3 +42,122 @@ insert into USER_DETAILS
 values 
 ('sampleuser','Admin'),
 ('support','QA')
+
+
+
+--------------------ORDER PROCESSING
+CREATE TABLE ORDERS (
+    ORDER_ID INT IDENTITY(1,1) NOT NULL,
+    CUSTOMER_NAME VARCHAR(200) ,
+    CUSTOMER_CONTACT VARCHAR(200) ,
+    TOTAL_PRICE DECIMAL(10, 2) ,
+    CONFIRMATION_NUMBER  VARCHAR(50) ,
+    ORDER_DATE DATETIME NOT NULL DEFAULT GETDATE()
+);
+
+
+
+
+CREATE TABLE ORDER_DETAILS (
+    ORDER_DETAILS_ID INT IDENTITY(1,1) NOT NULL,
+    ORDER_ID INT ,
+    BEVERAGE_DETAILS_ID INT ,
+    QUANTITY INT ,
+    
+    FOREIGN KEY (ORDER_ID )
+	REFERENCES [dbo].[ORDERS] ([ORDER_ID])ON DELETE CASCADE,
+
+	FOREIGN KEY([BEVERAGE_DETAILS_ID])
+	REFERENCES BEVERAGE_DETAILS(BEVERAGE_DETAILS_ID)ON DELETE CASCADE
+);
+
+SELECT * FROM ORDERS;
+SELECT * FROM ORDER_DETAILS;
+
+
+---------------------------------
+
+CREATE OR ALTER   PROCEDURE [dbo].[ADD_CUSTOMER_ORDER]
+ @Oders_Json NVARCHAR(MAX),
+ @Order_Confirmation_Number NVARCHAR(50) OUTPUT
+
+ AS
+	BEGIN
+
+	 DECLARE @Customer_Name NVARCHAR(100),
+             @Customer_Contact NVARCHAR(100)
+
+    SELECT 
+        @Customer_Name = JSON_VALUE(@Oders_Json, '$.customer_name'),
+        @Customer_Contact = JSON_VALUE(@Oders_Json, '$.customer_contact')
+
+
+
+     DECLARE @OrderItems AS TABLE
+    (
+        BEVERAGE_DETAILS_ID INT,
+        BEVERAGE_SIZE NVARCHAR(100),
+        BEVERAGE_PRICE DECIMAL(10,2),
+        BEVERAGE_CATEGORY_ID INT,
+        QUANTITY INT,
+		TOTAL_PRICE DECIMAL(10,2)
+    );
+	
+
+	DECLARE @New_Order_ID int;
+	SET @Order_Confirmation_Number  = NEXT VALUE FOR ORDER_CONFIRMATION_NUMBER_SEQ;
+
+    INSERT INTO @OrderItems 
+	(BEVERAGE_DETAILS_ID, BEVERAGE_SIZE, BEVERAGE_PRICE, BEVERAGE_CATEGORY_ID
+	, QUANTITY,TOTAL_PRICE)
+    SELECT 
+        BEVERAGE_DETAILS_ID,
+        BEVERAGE_SIZE,
+        BEVERAGE_PRICE,
+        BEVERAGE_CATEGORY_ID,
+        QUANTITY,
+		TOTAL_PRICE
+    FROM OPENJSON(@Oders_Json, '$.orderItems')
+    WITH (
+        BEVERAGE_DETAILS_ID INT '$.beverage_deatils_id',
+        BEVERAGE_SIZE NVARCHAR(100) '$.beverage_size',
+        BEVERAGE_PRICE DECIMAL(10,2) '$.beverage_price',
+        BEVERAGE_CATEGORY_ID INT '$.beverage_category_id',
+        QUANTITY INT '$.quantity',
+		TOTAL_PRICE DECIMAL(10,2) '$.total_price'
+    );
+
+   --SELECT * from @OrderItems
+
+   DECLARE @TotalOrderPrice DECIMAL(18,2);
+
+   SELECT @TotalOrderPrice = SUM(TOTAL_PRICE) FROM @OrderItems;
+
+
+
+	SET XACT_ABORT ON;
+
+	BEGIN TRAN
+
+		INSERT INTO ORDERS(CUSTOMER_NAME,CUSTOMER_CONTACT,TOTAL_PRICE,CONFIRMATION_NUMBER) 
+		SELECT
+		@Customer_Name,@Customer_Contact,@TotalOrderPrice, @Order_Confirmation_Number
+
+		SET @New_Order_ID = SCOPE_IDENTITY();
+
+		INSERT INTO ORDER_DETAILS 
+		SELECT
+		@New_Order_ID,BEVERAGE_DETAILS_ID,Quantity
+		FROM @OrderItems;
+
+	COMMIT TRAN
+    
+	IF (XACT_STATE()= -1)
+
+	BEGIN
+		ROLLBACK TRAN
+	END
+	
+	SET XACT_ABORT OFF;
+END
+
